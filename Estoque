@@ -1,0 +1,61 @@
+package ecommerce;
+
+import java.util.List;
+
+public class Estoque {
+
+    private ProdutoDAO produtoDAO;
+
+    public Estoque() {
+        
+        this.produtoDAO = new ProdutoDAO();
+    }
+
+   
+    public boolean adicionarProduto(Produto produto) {
+       
+        if (produtoDAO.buscarPorCodigo(produto.getCodigo()) != null) {
+            System.out.println("Erro! Produto já existe.");
+            return false;
+        }
+        return produtoDAO.adicionarProduto(produto);
+    }
+
+    
+    public boolean atualizarQuantidade(String codigo, int novaQuantidade) {
+        if (novaQuantidade < 0) {
+            System.out.println("Erro: Quantidade negativa.");
+            return false;
+        }
+        
+        if (produtoDAO.buscarPorCodigo(codigo) != null) {
+            return produtoDAO.atualizarQuantidade(codigo, novaQuantidade);
+        }
+        System.out.println("Produto não encontrado.");
+        return false;
+    }
+
+    
+
+    public Produto buscarPorCodigo(String codigo) {
+        return produtoDAO.buscarPorCodigo(codigo);
+    }
+
+    public List<Produto> getTodosProdutos() {
+        return produtoDAO.getTodosProdutos();
+    }
+
+    
+    
+    public List<Produto> buscarPorNome(String termo) {
+        return produtoDAO.buscarPorNome(termo);
+    }
+
+    public List<Produto> buscarPorCategoria(String categoria) {
+        return produtoDAO.buscarPorCategoria(categoria);
+    }
+
+    public List<Produto> getProdutosOrdenados(String criterio) {
+        return produtoDAO.getProdutosOrdenados(criterio);
+    }
+}
