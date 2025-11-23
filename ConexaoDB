@@ -1,0 +1,36 @@
+package ecommerce;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+
+public class ConexaoDB {
+
+    
+    private static final String URL_DB = "jdbc:mysql://localhost:3306/armazem_db";
+    
+   
+    private static final String USUARIO = "root";
+    
+   
+    private static final String SENHA = "2020";
+
+    
+    public static Connection conectar() {
+        try { 	
+        	
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+           
+            return DriverManager.getConnection(URL_DB, USUARIO, SENHA);
+            
+        } catch (ClassNotFoundException e) {
+            System.err.println("Erro: Driver JDBC do MySQL não encontrado! Verifique se o .jar está no projeto.");
+            return null;
+        } catch (SQLException e) {
+            System.err.println("Erro ao conectar ao banco de dados: " + e.getMessage());
+            return null;
+        }
+    }
+}
