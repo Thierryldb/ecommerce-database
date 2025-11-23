@@ -1,0 +1,223 @@
+package ecommerce;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+
+public class ProdutoDAO {
+
+    
+    public boolean adicionarProduto(Produto produto) {
+        
+        String sql = "INSERT INTO produtos(codigo, nome, categoria, preco, quantidade, avaliacao, popularidade) "
+                   + "VALUES(?, ?, ?, ?, ?, ?, ?)";
+
+        
+        try (Connection conn = ConexaoDB.conectar();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            
+            pstmt.setString(1, produto.getCodigo());
+            pstmt.setString(2, produto.getNome());
+            pstmt.setString(3, produto.getCategoria());
+            pstmt.setDouble(4, produto.getPreco());
+            pstmt.setInt(5, produto.getQuantidade());
+            pstmt.setDouble(6, produto.getAvaliacao());
+            pstmt.setInt(7, produto.getPopularidade());
+            
+            
+            pstmt.executeUpdate(); 
+            return true;
+
+        } catch (SQLException e) {
+            System.err.println("Erro ao adicionar produto: " + e.getMessage());
+            return false;
+        }
+    }
+
+    
+    public Produto buscarPorCodigo(String codigo) {
+        String sql = "SELECT * FROM produtos WHERE codigo = ?";
+
+        try (Connection conn = ConexaoDB.conectar();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, codigo); 
+
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
+                
+               
+                if (rs.next()) {
+                    
+                    return new Produto(
+                        rs.getString("codigo"),
+                        rs.getString("nome"),
+                        rs.getString("categoria"),
+                        rs.getDouble("preco"),
+                        rs.getInt("quantidade"),
+                        rs.getDouble("avaliacao"),
+                        rs.getInt("popularidade")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar produto: " + e.getMessage());
+        }
+        
+        return null; 
+    }
+
+   
+    public boolean atualizarQuantidade(String codigo, int novaQuantidade) {
+        String sql = "UPDATE produtos SET quantidade = ? WHERE codigo = ?";
+
+        try (Connection conn = ConexaoDB.conectar();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, novaQuantidade); 
+            pstmt.setString(2, codigo);
+            
+            pstmt.executeUpdate();
+            return true;
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao atualizar quantidade: " + e.getMessage());
+            return false;
+        }
+    }
+
+    
+    public List<Produto> getTodosProdutos() {
+        List<Produto> lista = new ArrayList<>();
+        String sql = "SELECT * FROM produtos";
+        
+        try (Connection conn = ConexaoDB.conectar();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+           
+            while (rs.next()) {
+                Produto p = new Produto(
+                    rs.getString("codigo"),
+                    rs.getString("nome"),
+                    rs.getString("categoria"),
+                    rs.getDouble("preco"),
+                    rs.getInt("quantidade"),
+                    rs.getDouble("avaliacao"),
+                    rs.getInt("popularidade")
+                );
+                lista.add(p);
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao listar produtos: " + e.getMessage());
+        }
+        
+        return lista;
+    }
+
+    public List<Produto> buscarPorNome(String termo) {
+        List<Produto> lista = new ArrayList<>();
+        
+        String sql = "SELECT * FROM produtos WHERE nome LIKE ?";
+        
+        try (Connection conn = ConexaoDB.conectar();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            
+            pstmt.setString(1, "%" + termo + "%"); 
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    
+                    lista.add(new Produto(
+                        rs.getString("codigo"),
+                        rs.getString("nome"),
+                        rs.getString("categoria"),
+                        rs.getDouble("preco"),
+                        rs.getInt("quantidade"),
+                        rs.getDouble("avaliacao"),
+                        rs.getInt("popularidade")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro na busca por nome: " + e.getMessage());
+        }
+        return lista;
+    }
+
+   
+    public List<Produto> buscarPorCategoria(String categoria) {
+        List<Produto> lista = new ArrayList<>();
+        String sql = "SELECT * FROM produtos WHERE categoria = ?";
+        
+        try (Connection conn = ConexaoDB.conectar();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, categoria);
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(new Produto(
+                        rs.getString("codigo"),
+                        rs.getString("nome"),
+                        rs.getString("categoria"),
+                        rs.getDouble("preco"),
+                        rs.getInt("quantidade"),
+                        rs.getDouble("avaliacao"),
+                        rs.getInt("popularidade")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro na busca por categoria: " + e.getMessage());
+        }
+        return lista;
+    }
+
+  
+    public List<Produto> getProdutosOrdenados(String criterio) {
+        List<Produto> lista = new ArrayList<>();
+        String colunaSQL;
+        String ordem = "DESC";
+
+       
+        switch (criterio.toLowerCase()) {
+            case "popularidade": colunaSQL = "popularidade"; break;
+            case "quantidade":   colunaSQL = "quantidade"; ordem = "ASC"; break;
+            case "preco":        colunaSQL = "preco"; ordem = "ASC"; break;
+            case "avaliacao":    colunaSQL = "avaliacao"; break;
+            default:             colunaSQL = "nome"; ordem = "ASC";
+        }
+
+       
+        String sql = "SELECT * FROM produtos ORDER BY " + colunaSQL + " " + ordem;
+
+        try (Connection conn = ConexaoDB.conectar();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                lista.add(new Produto(
+                    rs.getString("codigo"),
+                    rs.getString("nome"),
+                    rs.getString("categoria"),
+                    rs.getDouble("preco"),
+                    rs.getInt("quantidade"),
+                    rs.getDouble("avaliacao"),
+                    rs.getInt("popularidade")
+                ));
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao ordenar: " + e.getMessage());
+        }
+        return lista;
+    }
+    
+   
+}
